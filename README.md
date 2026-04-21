@@ -25,8 +25,10 @@ Header Content-Length penting agar browser tahu berapa byte yang harus dibaca da
 Pada milestone ini, server diperbarui agar dapat membedakan request yang valid dan tidak valid, lalu merespons secara selektif.
 
 Perubahan utama yang dilakukan:
-1. Hanya membaca baris pertama dari request HTTP (equest_line) menggunakan .lines().next().unwrap().unwrap(), karena kita hanya perlu tahu path yang diminta.
-2. Menggunakan if/else untuk mengecek isi equest_line:
+1. Hanya membaca baris pertama dari request HTTP (
+equest_line) menggunakan .lines().next().unwrap().unwrap(), karena kita hanya perlu tahu path yang diminta.
+2. Menggunakan if/else untuk mengecek isi 
+equest_line:
    - Jika requestnya adalah GET / HTTP/1.1, server merespons dengan status 200 OK dan mengirim hello.html.
    - Untuk semua request lainnya, server merespons dengan status 404 NOT FOUND dan mengirim 404.html.
 3. Menggunakan tuple (status_line, filename) agar logika pemilihan respons terpisah dari logika pengiriman respons — ini adalah bentuk refactoring sederhana yang membuat kode lebih bersih dan mudah dibaca.
@@ -73,22 +75,18 @@ Cara kerjanya:
 
 # Commit Bonus Reflection Notes
 
-Pada bagian bonus, ditambahkan fungsi uild() sebagai alternatif yang lebih aman dari 
-ew().
+Pada bagian bonus, ditambahkan fungsi build() sebagai alternatif yang lebih aman dari new().
 
-Perbedaan antara 
-ew() dan uild():
+Perbedaan antara new() dan build():
 
-| Aspek | 
-ew() | uild() |
+| Aspek | new() | build() |
 |---|---|---|
 | Return type | ThreadPool | Result<ThreadPool, PoolCreationError> |
-| Jika size = 0 | Panic (ssert!(size > 0)) | Return Err(PoolCreationError) |
+| Jika size = 0 | Panic (assert!(size > 0)) | Return Err(PoolCreationError) |
 | Error handling | Tidak bisa di-handle oleh caller | Bisa di-handle dengan unwrap_or_else, match, ? operator, dll |
 | Idiom Rust | Umum untuk constructors sederhana | Lebih idiomatic untuk operasi yang bisa gagal |
 
-Mengapa uild() lebih baik?
+Mengapa build() lebih baik?
 - Dalam Rust, fungsi yang berpotensi gagal sebaiknya mengembalikan Result bukan langsung panic. Ini memungkinkan caller untuk memutuskan sendiri apa yang harus dilakukan saat terjadi error — apakah retry, log error, atau exit dengan pesan yang informatif.
-- 
-ew() cocok untuk kasus di mana input invaliddianggap programming error (bug), sedangkan uild() cocok untuk kasus di mana input invalid bisa datang dari luar (misalnya config file atau user input).
+- new() cocok untuk kasus di mana input invaliddianggap programming error (bug), sedangkan build() cocok untuk kasus di mana input invalid bisa datang dari luar (misalnya config file atau user input).
 - Di main.rs, penggunaan unwrap_or_else memungkinkan kita mencetak pesan error yang jelas dan exit secara graceful, bukan crash dengan pesan panic yang membingungkan.
