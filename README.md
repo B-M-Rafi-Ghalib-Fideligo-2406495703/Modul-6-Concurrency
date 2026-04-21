@@ -50,3 +50,23 @@ Ketika kita membuka dua tab browser — satu ke 127.0.0.1:7878/sleep dan satu ke
 Inilah alasan mengapa server production tidak boleh single-threaded: satu request yang lambat akan memblokir semua request lainnya dan membuat semua pengguna menunggu.
 
 ![Commit 4 screen capture](assets/images/commit4.png)
+
+# Commit 5 Reflection Notes
+
+Pada milestone ini, server diubah dari single-threaded menjadi multithreaded menggunakan ThreadPool yang diimplementasikan secara manual.
+
+Komponen yang dibuat dalam src/lib.rs:
+
+1. **ThreadPool struct** — menyimpan daftar Worker dan sebuah sender channel (mpsc). Saat execute() dipanggil, job dikirim melalui channel ke salah satu worker yang tersedia.
+
+2. **Worker struct** — setiap worker memiliki ID dan sebuah thread yang berjalan dalam loop, menunggu job dari receiver channel. Worker menggunakan Arc<Mutex<Receiver>> agar receiver bisa dibagikan dengan aman ke banyak thread sekaligus.
+
+3. **Drop implementation** — saat ThreadPool di-drop, sender channel ditutup terlebih dahulu (agar semua worker menerima signal disconnect), lalu setiap worker thread di-join agar program tidak exit sebelum semua job selesai.
+
+Cara kerjanya:
+- ThreadPool::new(4) membuat 4 worker thread yang siap menerima job.
+- pool.execute(|| { handle_connection(stream); }) mengirim setiap koneksi masuk sebagai job ke thread pool.
+- Karena ada 4 thread, server kini bisa menangani hingga 4 koneksi secara bersamaan.
+- Sekarang jika membuka /sleep di satu tab, tab lain tetap bisa diakses tanpa menunggu.
+
+![Commit 5 screen capture](assets/images/commit5.png)
