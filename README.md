@@ -35,3 +35,18 @@ Pemisahan ini penting karena pada server production, logika routing dan pengirim
 
 ![Commit 3 screen capture - Hello page](assets/images/commit3-hello.png)
 ![Commit 3 screen capture - Oops page](assets/images/commit3-oops.png)
+
+# Commit 4 Reflection Notes
+
+Pada milestone ini, kita mensimulasikan masalah nyata dari server yang berjalan di single thread.
+
+Perubahan yang dilakukan:
+1. Menambahkan 	hread dan 	ime::Duration dari standard library.
+2. Menambahkan route baru GET /sleep HTTP/1.1 yang memanggil 	hread::sleep(Duration::from_secs(10)) sebelum merespons.
+
+Masalah yang terlihat:
+Ketika kita membuka dua tab browser — satu ke 127.0.0.1:7878/sleep dan satu ke 127.0.0.1:7878 — tab kedua harus menunggu sampai tab pertama selesai (10 detik) baru bisa mendapatkan respons. Ini karena server kita hanya memiliki satu thread, sehingga setiap request diproses secara bergantian (sequential), bukan bersamaan (concurrent).
+
+Inilah alasan mengapa server production tidak boleh single-threaded: satu request yang lambat akan memblokir semua request lainnya dan membuat semua pengguna menunggu.
+
+![Commit 4 screen capture](assets/images/commit4.png)
