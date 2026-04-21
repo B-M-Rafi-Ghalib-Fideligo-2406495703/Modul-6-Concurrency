@@ -70,3 +70,25 @@ Cara kerjanya:
 - Sekarang jika membuka /sleep di satu tab, tab lain tetap bisa diakses tanpa menunggu.
 
 ![Commit 5 screen capture](assets/images/commit5.png)
+
+# Commit Bonus Reflection Notes
+
+Pada bagian bonus, ditambahkan fungsi uild() sebagai alternatif yang lebih aman dari 
+ew().
+
+Perbedaan antara 
+ew() dan uild():
+
+| Aspek | 
+ew() | uild() |
+|---|---|---|
+| Return type | ThreadPool | Result<ThreadPool, PoolCreationError> |
+| Jika size = 0 | Panic (ssert!(size > 0)) | Return Err(PoolCreationError) |
+| Error handling | Tidak bisa di-handle oleh caller | Bisa di-handle dengan unwrap_or_else, match, ? operator, dll |
+| Idiom Rust | Umum untuk constructors sederhana | Lebih idiomatic untuk operasi yang bisa gagal |
+
+Mengapa uild() lebih baik?
+- Dalam Rust, fungsi yang berpotensi gagal sebaiknya mengembalikan Result bukan langsung panic. Ini memungkinkan caller untuk memutuskan sendiri apa yang harus dilakukan saat terjadi error — apakah retry, log error, atau exit dengan pesan yang informatif.
+- 
+ew() cocok untuk kasus di mana input invaliddianggap programming error (bug), sedangkan uild() cocok untuk kasus di mana input invalid bisa datang dari luar (misalnya config file atau user input).
+- Di main.rs, penggunaan unwrap_or_else memungkinkan kita mencetak pesan error yang jelas dan exit secara graceful, bukan crash dengan pesan panic yang membingungkan.

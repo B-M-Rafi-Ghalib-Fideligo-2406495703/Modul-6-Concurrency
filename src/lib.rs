@@ -36,6 +36,30 @@ impl ThreadPool {
         }
     }
 
+    /// Create a new ThreadPool, returning a Result instead of panicking.
+    ///
+    /// The size is the number of threads in the pool.
+    /// Returns `Err` if size is zero, allowing the caller to handle the error gracefully.
+    pub fn build(size: usize) -> Result<ThreadPool, PoolCreationError> {
+        if size == 0 {
+            return Err(PoolCreationError);
+        }
+
+        let (sender, receiver) = mpsc::channel();
+        let receiver = Arc::new(Mutex::new(receiver));
+
+        let mut workers = Vec::with_capacity(size);
+
+        for id in 0..size {
+            workers.push(Worker::new(id, Arc::clone(&receiver)));
+        }
+
+        Ok(ThreadPool {
+            workers,
+            sender: Some(sender),
+        })
+    }
+
     pub fn execute<F>(&self, f: F)
     where
         F: FnOnce() + Send + 'static,
@@ -56,6 +80,20 @@ impl Drop for ThreadPool {
                 thread.join().unwrap();
             }
         }
+    }
+}
+
+pub struct PoolCreationError;
+
+impl std::fmt::Display for PoolCreationError {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(f, "ThreadPool size must be greater than zero")
+    }
+}
+
+impl std::fmt::Debug for PoolCreationError {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(f, "PoolCreationError: size must be > 0")
     }
 }
 
